@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek & Lookup Informasi IP</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Cek & Lookup Informasi IP</h1>
+
+        <!-- Form untuk IP Lookup Manual -->
+        <div class="lookup-container">
+            <input type="text" id="ip-input" placeholder="Masukkan Alamat IP (contoh: 8.8.8.8)">
+            <button id="lookup-button">Cari</button>
+        </div>
+
+        <!-- Kartu untuk menampilkan hasil -->
+        <div id="ip-info-card" class="card loading">
+            <h2 id="card-title">Informasi IP Anda</h2>
+            <p id="loading-message">Memuat data, mohon tunggu...</p>
+            <div id="info-content" class="hidden">
+                <p><strong>Alamat IP:</strong> <span id="ip-address">-</span></p>
+                <p><strong>Provider (ISP):</strong> <span id="isp">-</span></p>
+                <p><strong>Lokasi:</strong> <span id="location">-</span></p>
+                <p><strong>Tipe Koneksi:</strong> <span id="connection-type" class="status">-</span></p>
+                <p><strong>Proxy / VPN:</strong> <span id="anonymity" class="status">-</span></p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Dibuat dengan ❤️ & Powered by <a href="https://ip-api.com/" target="_blank">ip-api.com</a></p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
