@@ -20,8 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingMessage.textContent = 'Memuat data, mohon tunggu...';
         infoContent.classList.add('hidden');
         
-        // URL API dinamis berdasarkan input
-        const apiUrl = `http://ip-api.com/json/${ipAddress}?fields=status,message,query,isp,country,city,mobile,proxy,hosting`;
+        // --- PERUBAHAN DI SINI ---
+        // Mengubah URL API dari http menjadi https
+        const apiUrl = `https://ip-api.com/json/${ipAddress}?fields=status,message,query,isp,country,city,mobile,proxy,hosting`;
 
         fetch(apiUrl)
             .then(response => response.json())
