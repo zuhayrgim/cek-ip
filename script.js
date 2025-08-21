@@ -13,65 +13,68 @@ document.addEventListener('DOMContentLoaded', () => {
     const connectionTypeEl = document.getElementById('connection-type');
     const anonymityEl = document.getElementById('anonymity');
 
-    // Fungsi utama untuk mengambil data IP
-    const getIpInfo = (ipAddress = '') => {
+    // Fungsi utama untuk mengambil data IP menggunakan DUA API
+    const getIpInfo = async (ipAddress = '') => {
         // Tampilkan status loading
         ipCard.classList.add('loading');
-        loadingMessage.textContent = 'Memuat data, mohon tunggu...';
+        loadingMessage.textContent = 'Memuat data dari beberapa sumber, mohon tunggu...';
         infoContent.classList.add('hidden');
         
-        // --- PERUBAHAN DI SINI ---
-        // Mengubah URL API dari http menjadi https
-        const apiUrl = `https://ip-api.com/json/${ipAddress}?fields=status,message,query,isp,country,city,mobile,proxy,hosting`;
+        try {
+            // --- PANGGILAN API #1: ipapi.co (Untuk Info Dasar) ---
+            const response1 = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+            const dataIpApiCo = await response1.json();
 
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Update judul kartu
-                    cardTitle.textContent = ipAddress ? `Hasil Pencarian untuk: ${data.query}` : 'Informasi IP Anda';
+            if (dataIpApiCo.error) {
+                throw new Error(dataIpApiCo.reason || 'IP tidak valid atau tidak ditemukan.');
+            }
+            
+            // Ambil IP yang sudah dikonfirmasi dari panggilan pertama
+            const confirmedIp = dataIpApiCo.ip;
 
-                    // Masukkan data ke elemen HTML
-                    ipAddressEl.textContent = data.query;
-                    ispEl.textContent = data.isp || '-';
-                    locationEl.textContent = data.city ? `${data.city}, ${data.country}` : data.country || '-';
+            // --- PANGGILAN API #2: ipinfo.io (Untuk Info Keamanan) ---
+            const response2 = await fetch(`https://ipinfo.io/${confirmedIp}/json`);
+            const dataIpInfoIo = await response2.json();
 
-                    // Logika untuk Tipe Koneksi
-                    if (data.hosting) {
-                        connectionTypeEl.textContent = 'Data Center';
-                        connectionTypeEl.className = 'status status-info';
-                    } else if (data.mobile) {
-                        connectionTypeEl.textContent = 'Mobile';
-                        connectionTypeEl.className = 'status status-warning';
-                    } else {
-                        connectionTypeEl.textContent = 'Residential';
-                        connectionTypeEl.className = 'status status-safe';
-                    }
+            // --- PENGGABUNGAN & TAMPILKAN DATA ---
+            
+            // Update judul kartu
+            cardTitle.textContent = ipAddress ? `Hasil Pencarian untuk: ${confirmedIp}` : 'Informasi IP Anda';
 
-                    // Logika untuk deteksi Proxy/VPN
-                    if (data.proxy) {
-                        anonymityEl.textContent = 'Terdeteksi (Yes)';
-                        anonymityEl.className = 'status status-danger';
-                    } else {
-                        anonymityEl.textContent = 'Tidak Terdeteksi (No)';
-                        anonymityEl.className = 'status status-safe';
-                    }
-                    
-                    // Tampilkan hasil dan sembunyikan loading
-                    ipCard.classList.remove('loading');
-                    infoContent.classList.remove('hidden');
+            // 1. Tampilkan data dari ipapi.co
+            ipAddressEl.textContent = dataIpApiCo.ip;
+            ispEl.textContent = dataIpApiCo.org || '-';
+            locationEl.textContent = dataIpApiCo.city ? `${dataIpApiCo.city}, ${dataIpApiCo.country_name}` : dataIpApiCo.country_name || '-';
 
-                } else {
-                    // Jika API mengembalikan error (misal: IP tidak valid)
-                    throw new Error(data.message || 'Gagal memuat data IP.');
-                }
-            })
-            .catch(error => {
-                console.error('Terjadi kesalahan:', error);
-                cardTitle.textContent = 'Terjadi Kesalahan';
-                loadingMessage.textContent = `Gagal memuat data. Error: ${error.message}`;
-                ipCard.classList.remove('loading');
-            });
+            // 2. Tampilkan data dari ipinfo.io
+            // Logika untuk Tipe Koneksi
+            if (dataIpInfoIo.abuse?.type === 'hosting') {
+                connectionTypeEl.textContent = 'Data Center';
+                connectionTypeEl.className = 'status status-info';
+            } else {
+                connectionTypeEl.textContent = 'ISP/Residential';
+                connectionTypeEl.className = 'status status-safe';
+            }
+
+            // Logika untuk deteksi Proxy/VPN
+            if (dataIpInfoIo.abuse?.type === 'vpn' || dataIpInfoIo.abuse?.type === 'proxy') {
+                anonymityEl.textContent = 'Terdeteksi (Yes)';
+                anonymityEl.className = 'status status-danger';
+            } else {
+                anonymityEl.textContent = 'Tidak Terdeteksi (No)';
+                anonymityEl.className = 'status status-safe';
+            }
+            
+            // Selesai, tampilkan hasilnya
+            ipCard.classList.remove('loading');
+            infoContent.classList.remove('hidden');
+
+        } catch (error) {
+            console.error('Terjadi kesalahan:', error);
+            cardTitle.textContent = 'Terjadi Kesalahan';
+            loadingMessage.textContent = `Gagal memuat data. Error: ${error.message}`;
+            ipCard.classList.remove('loading');
+        }
     };
 
     // Event listener untuk tombol pencarian
@@ -91,6 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Panggil fungsi saat halaman pertama kali dimuat untuk mendapatkan IP pengguna
+    // Panggil fungsi saat halaman pertama kali dimuat
     getIpInfo();
 });
